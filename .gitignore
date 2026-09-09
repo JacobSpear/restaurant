@@ -1,0 +1,10 @@
+__pycache__/
+.venv/
+*.pyc
+config.py
+*.csv
+*.xlsx
+*.json
+unlock/
+.env
+uv.lock
