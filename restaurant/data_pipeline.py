@@ -109,34 +109,25 @@ def build_datasets(
     toast_o = orders.loc[orders["source"] == "toast"]
     toast = pd.merge(toast_o, toast_s, on="Order Id")
 
-    taste_cond = (
-        toast["Menu Item"].str.contains("taste", case=False, na=False)
-        | toast["Menu"].str.contains("Sama", case=False, na=False)
-        | toast["Menu"].str.contains("Tikim", case=False, na=False)
-        | toast["Menu"].str.contains("Musang", case=False, na=False)
-        | toast["Menu"].str.contains("Kayu", case=False, na=False)
-    )
+    taste_cond = toast["Menu Item"].str.contains("taste", case=False, na=False)
+    for kw in cfg.TASTING_MENU_KEYWORDS:
+        taste_cond = taste_cond | toast["Menu"].str.contains(kw, case=False, na=False)
     taste_order_ids = toast.loc[taste_cond, "Order Id"].unique()
 
     bev_only_ids = toast[
         toast.groupby("Order Id")["Sales Category"].transform(
             lambda x: x.isin(
-                ["Bottled Beer", "Draft Beer", "Beer", "Liquor",
-                 "NA Beverage", "Wine"]
+                cfg.BEV_CATEGORIES
             ).all()
         )
     ]["Order Id"].unique()
     indoor_ids = toast_o.loc[
-        toast_o["Dining Area"].isin({"Dining Room", "Bar"})
+        toast_o["Dining Area"].isin({cfg.DINING_AREA_MAIN, cfg.DINING_AREA_BAR})
     ]["Order Id"].unique()
     bev_indoor_ids = list(set(bev_only_ids) & set(indoor_ids))
 
     walkin_ids = toast_s[
-        (toast_s["Menu Item"].isin({
-            "Sama Sama Menu", "Sama Sama Set Menu",
-            "Sama Sama Set Menu - Weekend Edition (June)",
-            "Tikim Tasting Menu", "Tikim Tikim Summer Special",
-        }))
+        (toast_s["Menu Item"].isin(cfg.WALKIN_TASTING_ITEMS))
         & (toast_s["Net Receivable"] > 0)
     ]["Order Id"].unique()
 

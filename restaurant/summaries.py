@@ -1,7 +1,3 @@
-"""
-Daily revenue summary functions for Toast and Tock data.
-"""
-
 from __future__ import annotations
 
 import datetime
@@ -25,22 +21,22 @@ def _filter_by_area(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return (orders, sales) filtered to the specified dining area.
 
-    area: 0=all, 1=Dining Room, 2=Bar, 3=Bayani/Patio/Bodhi.
+    area: 0=all, 1=Dining Room, 2=Bar, 3=Outdoor.
     """
     if area == 0:
         return orders, sales
     if area == 1:
         return (
-            orders.loc[orders["Dining Area"] == "Dining Room"],
-            sales.loc[sales["Dining Area"] == "Dining Room"],
+            orders.loc[orders["Dining Area"] == cfg.DINING_AREA_MAIN],
+            sales.loc[sales["Dining Area"] == cfg.DINING_AREA_MAIN],
         )
     if area == 2:
         return (
-            orders.loc[orders["Dining Area"] == "Bar"],
-            sales.loc[sales["Dining Area"] == "Bar"],
+            orders.loc[orders["Dining Area"] == cfg.DINING_AREA_BAR],
+            sales.loc[sales["Dining Area"] == cfg.DINING_AREA_BAR],
         )
     if area == 3:
-        patio_areas = {"Bayani Bar", "Patio", "Bodhi Garden", "Waiting Area"}
+        patio_areas = cfg.PATIO_AREA_NAMES
         patio_tbl = cfg.PATIO_TABLES
         o_mask = (
             orders["Dining Area"].isin(patio_areas)
@@ -80,7 +76,7 @@ def toast_summary(
         (mgd["Sales Category"] != "Wine")
         & (mgd["Sales Category"] != "NA Beverage")
         & (mgd["Toast Taste Flag"] == True)
-        & (mgd["Menu"].isin(["Sama Sama Menu", "A La Carte Menu"])),
+        & (mgd["Menu"].isin(cfg.TASTING_VS_ALC_MENUS)),
         "Net Receivable",
     ].sum()
     d["NA"] = s1.loc[s1["Sales Category"] == "NA Beverage", "Net Receivable"].sum()
@@ -98,14 +94,14 @@ def toast_summary(
     d["Retail"] = s1.loc[s1["Sales Category"] == "Retail", "Net Receivable"].sum()
 
     # Location breakdown
-    patio_areas = {"Bayani Bar", "Patio", "Bodhi Garden", "Waiting Area"}
-    d["Bar"] = o1.loc[o1["Dining Area"] == "Bar", "Amount"].sum()
-    d["Bayani/Patio/Bodhi"] = o1.loc[
+    patio_areas = cfg.PATIO_AREA_NAMES
+    d["Bar"] = o1.loc[o1["Dining Area"] == cfg.DINING_AREA_BAR, "Amount"].sum()
+    d[cfg.OUTDOOR_AREA_LABEL] = o1.loc[
         o1["Dining Area"].isin(patio_areas)
         | (o1["Dining Area"].isna() & o1["Table"].isin(cfg.PATIO_TABLES)),
         "Amount",
     ].sum()
-    d["Dining Room"] = o1.loc[o1["Dining Area"] == "Dining Room", "Amount"].sum()
+    d["Dining Room"] = o1.loc[o1["Dining Area"] == cfg.DINING_AREA_MAIN, "Amount"].sum()
     d["No Dining Area"] = o1.loc[
         o1["Dining Area"].isna() & ~o1["Table"].isin(cfg.PATIO_TABLES),
         "Amount",
@@ -130,10 +126,10 @@ def tock_summary(
     if area == 0:
         o0, s0 = orders, sales
     elif area == 1:
-        o0 = orders.loc[orders["Dining Area"] == "Dining Room"]
-        s0 = sales.loc[sales["Dining Area"] == "Dining Room"]
+        o0 = orders.loc[orders["Dining Area"] == cfg.DINING_AREA_MAIN]
+        s0 = sales.loc[sales["Dining Area"] == cfg.DINING_AREA_MAIN]
     else:
-        # Bar / Bayani have no Tock orders in practice
+        # Bar / Outdoor have no Tock orders in practice
         o0 = orders.loc[orders["Dining Area"] == "XXX"]
         s0 = sales.loc[sales["Dining Area"] == "NA"]
 
@@ -186,7 +182,7 @@ def _get_row_order(label: str) -> list[int]:
         toast_map = {
             "Toast Net": (0, 1), "Toast Bev": (1, 0), "Toast NA": (1, 1),
             "Toast Liquor": (1, 2), "Toast Beer": (1, 3), "Toast Wine": (1, 4),
-            "Toast Bar": (2, 1), "Toast Bayani/Patio/Bodhi": (2, 2),
+            "Toast Bar": (2, 1), f"Toast {cfg.OUTDOOR_AREA_LABEL}": (2, 2),
             "Toast Dining Room": (2, 3), "Toast No Dining Area": (2, 3),
             "Toast Service Charge": (3, 1), "Toast Retail": (4, 1),
             "Toast Card Tips": (3, 2), "Toast Gift Card": (3, 3),

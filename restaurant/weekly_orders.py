@@ -20,14 +20,13 @@ from datetime import date, timedelta
 import statsmodels.api as sm
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font, NamedStyle, Alignment
-
+from . import config as cfg
 
 def menu(oval, ival):
     """Classify menu items into categories."""
     if oval == oval:  # Check if not NaN
         return oval
-    elif ival in ['Cassava Cake', 'Kalabasa Cheesecake',
-                  'Kalabasa Cheese Cake', 'Bellychon', 'Pancit Canton', 'Turon Sundae']:
+    elif ival in cfg.MAGICAL_DINING_ITEMS:
         return 'A La Carte Menu'
     elif ('caesar' in ival.lower()) or ('cesar' in ival.lower()) or ('ceasar' in ival.lower()):
         return 'A La Carte Menu'
@@ -37,45 +36,23 @@ def menu(oval, ival):
 
 def item2(item):
     """Normalize menu item names."""
-    if item in ['Pritong Isda', 'Pritong Isda - Fried Tile Fish', 'Pritong Isda - Halibut', 'Pritong Isda - Blk Drum',
-                'Fried Fish', 'Pritong- Crusted Dorade', 'Fresh Catch', 'Pinipig Crusted Fish', 'Pinipig Fish']:
-        return 'Pritong Isda'
-    elif item in ['Whole Fried Fish', 'Crispy Fried Fish', 'Whole Fried Sea Trout 0.9', 'Whole Fried Sea Trout 1.0']:
-        return 'Whole Fried Fish'
-    elif item in ['Kinilaw', 'Coconut Kinilaw', 'Tile Kinilaw', 'Tuna Coconut Kinilaw', 'Madai Kinilaw', 'Kinilaw Hipon', 'Kinilaw Isda', 'HH Kinilaw', 'Kinilaw w Chips']:
-        return 'Kinilaw'
-    elif 'kaldereta' in item.lower():
-        return "Kaldereta"
-    elif 'binago' in item.lower():
-        return "Binagoongan"
-    elif 'laing' in item.lower():
-        return "Laing"
-    elif 'bicol' in item.lower():
-        return "Bicol Express"
-    elif "swaki" in item.lower():
+    for normalized, variants in cfg.ITEM_NORMALIZATION.items():
+        if item in variants:
+            return normalized
+
+    item_lower = item.lower()
+    for normalized, substrings in cfg.ITEM_NORMALIZATION_SUBSTRING.items():
+        if isinstance(substrings, str):
+            substrings = [substrings]
+        if any(sub in item_lower for sub in substrings):
+            return normalized
+
+    wacky_match = any(sub in item_lower for sub in cfg.WACKY_TOAST_SUBSTRINGS)
+    wacky_exclude = any(sub in item_lower for sub in cfg.WACKY_TOAST_EXCLUDE)
+    if wacky_match and not wacky_exclude:
         return "Wacky+Toast"
-    elif (("uni" in item.lower()) and not ('kini' in item.lower())) or ('900' in item.lower()) or ('toast' in item.lower()):
-        return "Wacky+Toast"
-    elif 'munggo' in item.lower():
-        return "pork munngo"
-    elif item == 'Turón Sundae':
-        return "Turon Sundae"
-    elif 'bringhe' in item.lower():
-        return "Bringhe"
-    elif 'sisig' in item.lower():
-        return "Sisig"
-    elif 'sariwa' in item.lower():
-        return "Sariwa"
-    elif ('bicho' in item.lower()) or ('bitso' in item.lower()):
-        return "Bitso-Bitso"
-    elif ('caesar' in item.lower()) or ('cesar' in item.lower()) or ('ceasar' in item.lower()):
-        return "Caesar Salad"
-    elif 'cheesecake' in item.lower():
-        return "Cheesecake"
-    elif 'donut' in item.lower():
-        return "Donuts"
-    else:
-        return item
+
+    return item
 
 
 def get_day_of_week(date_str):
@@ -288,10 +265,10 @@ def generate_kitchen_pars(
     est0["WK"] = [b + m * wk_avg for m, b in zip(est0["Total"], est0["const"])]
     est1 = est0.merge(pd.DataFrame(rs), on="Menu Item2")
 
-    x = da.groupby("Menu Item2").mean("# of Orders").reset_index().rename(columns={"# of Orders": "Mean"}).merge(
+    x = da.groupby("Menu Item2")["# of Orders"].mean().reset_index().rename(columns={"# of Orders": "Mean"}).merge(
         est1[["Menu Item2", "FS", "WK"]], on="Menu Item2"
     )
-    x = da.groupby("Menu Item2").median("# of Orders").reset_index().rename(columns={"# of Orders": "Median"}).merge(
+    x = da.groupby("Menu Item2")["# of Orders"].median().reset_index().rename(columns={"# of Orders": "Median"}).merge(
         x, on="Menu Item2"
     )
     x2 = x.rename(columns={
@@ -429,8 +406,8 @@ def main():
     est1 = est0.merge(pd.DataFrame(rs), on='Menu Item2')
 
     # Merge with averages and medians
-    x = da.groupby('Menu Item2').mean('# of Orders').reset_index().rename(columns={'# of Orders': 'Mean'}).merge(est1[['Menu Item2', 'FS', 'WK']], on='Menu Item2')
-    x = da.groupby('Menu Item2').median('# of Orders').reset_index().rename(columns={'# of Orders': 'Median'}).merge(x, on='Menu Item2')
+    x = da.groupby('Menu Item2')['# of Orders'].mean().reset_index().rename(columns={'# of Orders': 'Mean'}).merge(est1[['Menu Item2', 'FS', 'WK']], on='Menu Item2')
+    x = da.groupby('Menu Item2')['# of Orders'].median().reset_index().rename(columns={'# of Orders': 'Median'}).merge(x, on='Menu Item2')
 
     x2 = x.rename(columns={
         'Median': 'Long-Term Median',

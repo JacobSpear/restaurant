@@ -92,8 +92,8 @@ def two_week_change(
     for row in row_labels:
         out["index"].append(row)
         for col in ("Week 1 Total", "Week 2 Total", "Total"):
-            c_val = float(cur2.loc[cur2["index"] == row, col])
-            b_val = float(comp2.loc[comp2["index"] == row, col])
+            c_val = float(cur2.loc[cur2["index"] == row, col].iloc[0])
+            b_val = float(comp2.loc[comp2["index"] == row, col].iloc[0])
             out[col].append(_pct_change_str(c_val, b_val))
     return pd.DataFrame(out)
 
@@ -130,8 +130,8 @@ def daily_change(
     for row in row_labels:
         out["index"].append(row)
         for col in set(_DAY_COLUMNS) - {"index"}:
-            c_val = float(cur2.loc[cur2["index"] == row, col])
-            b_val = float(comp2.loc[comp2["index"] == row, col])
+            c_val = float(cur2.loc[cur2["index"] == row, col].iloc[0])
+            b_val = float(comp2.loc[comp2["index"] == row, col].iloc[0])
             out[col].append(_pct_change_str(c_val, b_val))
     return pd.DataFrame(out)
 
@@ -237,8 +237,8 @@ def export_to_excel(
         # Fix escaped dollar signs
         for row in ws.iter_rows(min_row=2):
             for cell in row:
-                if isinstance(cell.value, str) and "\$" in cell.value:
-                    cell.value = cell.value.replace("\$", "$")
+                if isinstance(cell.value, str) and r"\$" in cell.value:
+                    cell.value = cell.value.replace(r"\$", "$")
 
         # Auto-width
         for col in ws.columns:
@@ -320,7 +320,7 @@ def generate_biweekly_report(
         chg_2wk, chg_yr, dchg_2wk, dchg_yr,
     ]
     sheet_names = [
-        "Whole Restaurant", "Dining Room", "Bar", "Bayani Bar",
+        *cfg.DINING_AREA_NAMES,
         "Change - 2 Weeks", "Change - Year",
         "Daily Change - 2 Weeks", "Daily Change - Year",
     ]

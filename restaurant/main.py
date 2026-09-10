@@ -18,7 +18,8 @@ Usage examples::
 """
 
 from __future__ import annotations
-
+import re
+import pandas_gbq
 import argparse
 import os
 import sys
@@ -85,7 +86,9 @@ def upload_to_bigquery(
 
     for name, df in tables:
         destination = f"{project}.{dataset}.{name}"
-        df.to_gbq(destination, project_id=project, if_exists="replace")
+        df=df.copy()
+        df.columns = [re.sub(r"[^a-zA-Z0-9_]", "_", col).rstrip("_") for col in df.columns]
+        pandas_gbq.to_gbq(df, destination, project_id=project, if_exists="replace")
         print(f"  Uploaded {name} ({len(df):,} rows) to {destination}")
 
 
