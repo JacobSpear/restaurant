@@ -4,11 +4,9 @@ A data pipeline for a restaurant that merges two point-of-sale systems (Toast an
 
 ## What it does
 
-- **Extract/Transfer/Load** monthly Toast sales CSVs, quarterly Toast order CSVs, Tock reservation exports, and manually entered cover counts
+- **Extracts** monthly Toast sales CSVs, quarterly Toast order CSVs, Tock reservation exports, and manually entered cover counts
+- **Transforms** the data to allow for ease of analysis
 - **Uploads** raw and processed data to Google BigQuery for cloud storage and querying
-- **Merges** the two POS systems into a unified sales and orders dataset, reconciling discounts, service charges, gift cards, and dining area assignments
-- **Structures** the data to allow for ease of analysis
-- **Categorises** every line item by menu group, sales category, experience type, and dining area
 - **Summarises** revenue by day, breaking it down by source (Toast vs Tock), category (food, beverage, retail, service charge), and dining area
 - **Generates** bi-weekly Excel reports with week-over-week and year-over-year comparisons
 - **Produces** weekly kitchen prep estimates (Kitchen Pars) using OLS regression of item order counts against total daily revenue
