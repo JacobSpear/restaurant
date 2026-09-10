@@ -40,7 +40,7 @@ restaurant/
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/restaurant.git
+git clone https://github.com/JacobSpear/restaurant.git
 cd restaurant
 pip install -e .
 ```
