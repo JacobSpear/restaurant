@@ -11,6 +11,10 @@ A data pipeline for a restaurant that merges two point-of-sale systems (Toast an
 - **Generates** bi-weekly Excel reports with week-over-week and year-over-year comparisons
 - **Produces** weekly kitchen prep estimates (Kitchen Pars) using OLS regression of item order counts against total daily revenue
 
+## Development and Attribution
+
+This project was originally developed in a series of notebooks by hand (human-developed) and was later re-factored to the current modular structure with AI assistance.  In particular, decisions about how data are processed, how analyses are performed, and how results are presented were made and initially implemented by the human developer.
+
 ## Project structure
 
 ```
