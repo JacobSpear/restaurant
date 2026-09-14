@@ -3,6 +3,7 @@ Merge Toast + Tock data and apply experience/dining-area flags.
 """
 
 from __future__ import annotations
+import datetime
 
 import pandas as pd
 
@@ -134,6 +135,17 @@ def build_datasets(
     unique_taste_ids = set(taste_order_ids) | set(bev_indoor_ids)
     orders["Toast Taste Flag"] = orders["Order Id"].isin(unique_taste_ids)
     orders["Walk-In Tasting"] = orders["Order Id"].isin(walkin_ids)
+
+    #Remove tasting detection in most cases after cutoff date
+    cutoff_date = datetime.datetime.strptime(cfg.TASTING_THRESHOLD_START, "%Y-%m-%d").date()
+    
+    post_cutoff = orders["Date"] >= cutoff_date
+    
+    if post_cutoff.any():
+        per_person = orders["Amount"] / orders["# of Guests"].replace(0, 1)
+        reclassify = post_cutoff & (orders["Toast Taste Flag"] | orders["Walk-In Tasting"]) & (per_person <= cfg.TASTING_PER_PERSON_THRESHOLD) 
+        orders.loc[reclassify, "Toast Taste Flag"] = False
+        orders.loc[reclassify, "Walk-In Tasting"] = False
 
     # 7. Experience category
     orders["Experience Category"] = orders.apply(_classify_experience, axis=1)

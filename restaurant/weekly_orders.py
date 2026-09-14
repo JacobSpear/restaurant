@@ -224,7 +224,7 @@ def generate_kitchen_pars(
     sales["Menu Item2"] = [item2(x).lower() for x in sales["Menu Item"]]
 
     filtered_sales = sales.loc[
-        ((sales["Menu2"] == "Magical Dining") | (sales["Menu2"] == "A La Carte Menu"))
+        ((sales["Menu2"] == "Magical Dining") | (sales["Menu2"] == "A La Carte Menu") | (sales["Menu2"] == "MAGICAL DINING"))
         & ((sales["Date"].str.contains("2025")) | (sales["Date"].str.contains("2026")))
     ]
     unique_menu_items = filtered_sales["Menu Item2"].unique()
@@ -239,7 +239,7 @@ def generate_kitchen_pars(
 
     filtered_sales_in_set2 = filtered_sales_in_set.loc[
         (filtered_sales_in_set["Menu Item2"].isin(mySet))
-        & (filtered_sales_in_set["Menu2"].isin(["A La Carte Menu", "Magical Dining"]))
+        & (filtered_sales_in_set["Menu2"].isin(["A La Carte Menu", "Magical Dining","MAGICAL DINING"]))
     ]
     dates_available = filtered_sales_in_set2.groupby(["Menu Item2", "Date"])["Qty"].sum()
     da = pd.DataFrame(dates_available).reset_index().rename(columns={"Qty": "# of Orders"})
@@ -283,7 +283,7 @@ def generate_kitchen_pars(
     # Recent week
     fs_wk = filtered_sales_in_set.loc[
         (filtered_sales_in_set["Menu Item2"].isin(mySet))
-        & (filtered_sales_in_set["Menu2"].isin(["A La Carte Menu", "Magical Dining"]))
+        & (filtered_sales_in_set["Menu2"].isin(["A La Carte Menu", "Magical Dining", "MAGICAL DINING"]))
         & (filtered_sales_in_set["Date"].apply(checkdt))
     ]
     gb_wk = fs_wk.groupby(["Menu Item2", "Date"]).size()
@@ -353,7 +353,7 @@ def main():
     sales['Menu Item2'] = [item2(x).lower() for x in sales['Menu Item']]
 
     # Filter sales data
-    filtered_sales = sales.loc[((sales['Menu2'] == 'Magical Dining') | (sales['Menu2'] == 'A La Carte Menu')) & 
+    filtered_sales = sales.loc[((sales['Menu2'] == 'Magical Dining') | (sales['Menu2'] == 'A La Carte Menu') | (sales['Menu2'] == 'MAGICAL DINING')) & 
                               ((sales['Date'].str.contains('2025')) | (sales['Date'].str.contains('2026')))]
 
     unique_menu_items = filtered_sales['Menu Item2'].unique()
@@ -373,7 +373,7 @@ def main():
     # Further filter sales data
     filtered_sales_in_set2 = filtered_sales_in_set.loc[
         (filtered_sales_in_set['Menu Item2'].isin(mySet)) & 
-        (filtered_sales_in_set['Menu2'].isin(['A La Carte Menu', 'Magical Dining']))
+        (filtered_sales_in_set['Menu2'].isin(['A La Carte Menu', 'Magical Dining', 'MAGICAL DINING']))
     ]
 
     dates_available = (
